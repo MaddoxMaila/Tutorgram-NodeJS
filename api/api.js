@@ -46,21 +46,6 @@ class Database{
 
 }
 
-
-
-// async function hello(){
-//     try {
-//         let con = new Database();
-//         let x = await con.query(`SELECT * FROM users`, null);
-//         console.log(x);
-//     } catch (error) {
-//         console.log(error);
-//     }
-
-    
-// }
-// hello();
-
 exports.login = class UserLogin extends Database {
 
     constructor(email, password){
