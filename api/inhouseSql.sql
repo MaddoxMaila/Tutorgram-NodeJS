@@ -5,3 +5,5 @@ CREATE TABLE users(
    user_password text not null,
    userId int not null PRIMARY KEY
 );
+
+INSERT INTO users VALUES("maddox", "ma@gmail", "20/10/23", "maddox", 1);
