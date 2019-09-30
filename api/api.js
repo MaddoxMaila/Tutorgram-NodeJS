@@ -84,3 +84,16 @@ exports.login = class UserLogin extends Database {
     }
 
 }
+
+exports.user = class User extends Database{
+
+    constructor(context, userId, viewerId){
+
+        this.args = {
+            context : context,
+            user_id : userId,
+            view_id : viewerId,
+        }
+        
+    }
+}
