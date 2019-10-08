@@ -70,7 +70,7 @@ exports.login = class UserLogin extends Database {
 
     }
 
-    async accessor(Callback){
+    async accessor(callback){
 
         try{
 
@@ -93,7 +93,7 @@ exports.login = class UserLogin extends Database {
 
             }
 
-            Callback(this.response);
+            callback(this.response);
 
         }catch (error){
 
@@ -105,10 +105,10 @@ exports.login = class UserLogin extends Database {
 
 } // End Of Class Login Definition
 
-let login = new exports.login("madd@gmail", "maddox");
-login.accessor((data)=>{
-   console.log(data);
-});
+// let login = new exports.login("madd@gmail", "maddox");
+// login.accessor((data)=>{
+//    console.log(data);
+// });
 
 exports.user = class User extends Database{
 
@@ -125,16 +125,16 @@ exports.user = class User extends Database{
             c_picture : 'cover_picture'
 
         }; // End Of Class Object
-        
     } // End Of Constructor
 
     async getUserInteration(){
 
         try {
 
-            let totalPosts = textPosts = imgsPosts = videoPosts = [];
 
-        totalPosts = await this.query('SELECT type,post_id FROM posts WHERE user_id = ?', [this.args.user_id]);// Get Number Of Posts This User Has Posted
+            let totalPosts, textPosts = [], imgsPosts = [], videoPosts = [];
+
+        totalPosts = await this.query('SELECT post_type,post_id FROM posts WHERE user_id = ?', [this.args.user_id]);// Get Number Of Posts This User Has Posted
 
            // Check If User Has More Than One Post/s
 
@@ -154,14 +154,16 @@ exports.user = class User extends Database{
 
            }
 
-          return {
+          return new Promise((resolve, reject) => {
+              resolve({
 
-            num_of_posts : totalPosts.length,
-            text_posts : textPosts.length,
-            image_posts : imgsPosts.length,
-            video_posts : videoPosts.length
-
-          }; // Get Object
+                num_of_posts : totalPosts.length,
+                text_posts : textPosts.length,
+                image_posts : imgsPosts.length,
+                video_posts : videoPosts.length
+    
+              });
+          }); // Get Object
             
         } catch (error) {
             
@@ -173,30 +175,52 @@ exports.user = class User extends Database{
 
     // Organise The User Data Collected And Return It
 
-    async formatter(callback){
+    async formatter(callback, outside){
+        
+        let gatheredUserInfo = {
+            user_info : await this.getUserInfo(),
+            user_stats : await this.getFollowers(),
+            user_interact : await this.getUserInteration()
+        };
 
-        callback(
-            {
+        if(outside){
+            
+            callback(gatheredUserInfo);
+            return;
 
-            }
-        ); // End Of callback function
+        }else{
+
+            return new Promise((resolve, reject) => {
+
+                if(gatheredUserInfo){
+                    resolve(gatheredUserInfo);
+                }else{
+                    reject({error : true, message : "Promise Rejection"});
+                }
+
+            });
+
+
+        }
 
     } // End Of Formatter
 
     async getUserInfo(){
 
         try {
+            let userInfo = {
 
-            return {
-
-                user : await this.query('SELECT username, email, account_type, account_date, user_id FROM users WHERE user_id = ?', [this.args.user_id])[0], // Get Basic User Information
-                bio : await this.query('SELECT * FROM bio WHERE user_id = ?', [this.args.user_id])[0], // Get            Additional Info
+                user : (await this.query('SELECT username, email, account_type, account_date, user_id FROM users WHERE user_id = ?', [this.args.user_id]))[0], // Get Basic User Information
+                bio : (await this.query('SELECT * FROM bio WHERE user_id = ?', [this.args.user_id]))[0], // Get            Additional Info
     
-                profile_picture : await this.query('SELECT image_url FROM user_images WHERE user_id = ?', [this.args.user_id, this.args.p_picture])[0], // Get User Profile Picture
+                profile_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.p_picture]))[0], // Get User Profile Picture
     
-                cover_picture : await this.query('SELECT img_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.c_picture])[0], // Get User PRofile Cover Picture
+                cover_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.c_picture]))[0], // Get User PRofile Cover Picture
     
-            }; // End Of Object
+            };
+            return new Promise((resolve, reject) => {
+                resolve(userInfo);
+            });
 
         } catch (error) {
            
@@ -207,28 +231,43 @@ exports.user = class User extends Database{
     } // End Of getAdditionalInfo
 
     async getFollowers(){
-         
-          return {
+        try {
+            let userFollows = {
 
-              num_of_followers : await this.query('SELECT follow_id FROM follow WHERE user_two_id = ?', [this.args.user_id]).length, // Get Number Of Followers Following This User
+                num_of_followers : (await this.query('SELECT follow_id FROM follow WHERE user_two_id = ?', [this.args.user_id])).length, // Get Number Of Followers Following This User
+    
+                num_of_following : (await this.query('SELECT follow_id FROM follow WHERE user_one_id = ?', [this.args.user_id])).length, // Get Number Of Users This User Is Following
+    
+                isFollowing : (await this.query('SELECT follow_id FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.args.user_id, this.args.view_id])).length == 1 ? true : false, // Is This User Following Viewer?
+    
+                isFollower : (await this.query('SELECT follow_id FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.args.view_id, this.args.user_id])).length == 1 ? true : false // Is This Viewer Following User
+    
+            };
+            return new Promise((resolve, reject) => {
+                resolve(userFollows);
+            });
+    
+        } catch (error) {
 
-              num_of_following : await this.query('SELECT follow_id FROM follow WHERE user_one_id = ?', [this.args.user_id]).length, // Get Number Of Users This User Is Following
-
-              isFollowing : (await this.query('SELECT follow_id FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.args.user_id, this.args.view_id]).length == 1) ? true : false, // Is This User Following Viewer?
-
-              isFollower : (await this.query('SELECT follow_id FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.args.view_id, this.args.user_id]).length == 1) ? true : false // Is This Viewer Following User
-
-          }; // End Of Object
-
+            console(error);
+            
+        }
     } // End Of getFollowers
 
 } // End Of Class Def
+
+// let usr = new exports.user(1, 1, 0);
+// usr.formatter((data) => {
+//     console.log(JSON.stringify(data));
+// }, true);
 
  // This Following Class Is Used To Return Both Posts And Comments To A Post 
 
 exports.posts = class posts extends Database{
 
     constructor(cxt, userId = 0, postId = 0){
+
+        super();
 
         this.args = {};
         this.args.context = cxt;
@@ -271,13 +310,13 @@ exports.posts = class posts extends Database{
 
                 post_data : {
 
-                    num_of_likes : await this.query('SELECT like_id FROM likes WHERE post_id = ?', [row.post_id]).length,
+                    num_of_likes : (await this.query('SELECT like_id FROM post_likes WHERE post_id = ?', [row.post_id])).length,
 
-                    num_of_comments : await this.query('SELECT p_id comments WHERE post_id =?', [row.post_id]).length,
+                    num_of_comments : (await this.query('SELECT comment_id comments WHERE post_id =?', [row.post_id])).length,
 
                 },
 
-                user : await User.formatter(),
+                user : (await User.formatter(null, false)),
 
 
 
@@ -303,3 +342,9 @@ exports.posts = class posts extends Database{
     } // End Of getPosts
 
 } // End Of Class Posts Definition
+
+// let posts = new exports.posts(1);
+
+// posts.getPosts(0, (data) => {
+//     console.log(data);
+// });
