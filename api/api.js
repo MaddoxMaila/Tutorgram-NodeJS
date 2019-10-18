@@ -54,7 +54,7 @@ class Database{
 
             }
 
-        })
+        });
 
     }
 
@@ -80,6 +80,7 @@ exports.login = class UserLogin extends Database {
                 this.response =  {
                     error : false,
                     logged : true,
+                    message : "Login Successful, You're Now Logged In",
                     user: results[0]
                 };
 
@@ -193,13 +194,16 @@ exports.user = class User extends Database{
             return new Promise((resolve, reject) => {
 
                 if(gatheredUserInfo){
+
                     resolve(gatheredUserInfo);
+
                 }else{
+
                     reject({error : true, message : "Promise Rejection"});
+
                 }
 
             });
-
 
         }
 
@@ -208,9 +212,11 @@ exports.user = class User extends Database{
     async getUserInfo(){
 
         try {
+
             let userInfo = {
 
                 user : (await this.query('SELECT username, email, account_type, account_date, user_id FROM users WHERE user_id = ?', [this.args.user_id]))[0], // Get Basic User Information
+                
                 bio : (await this.query('SELECT * FROM bio WHERE user_id = ?', [this.args.user_id]))[0], // Get            Additional Info
     
                 profile_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.p_picture]))[0], // Get User Profile Picture
@@ -218,8 +224,11 @@ exports.user = class User extends Database{
                 cover_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.c_picture]))[0], // Get User PRofile Cover Picture
     
             };
+
             return new Promise((resolve, reject) => {
+
                 resolve(userInfo);
+
             });
 
         } catch (error) {
@@ -231,7 +240,9 @@ exports.user = class User extends Database{
     } // End Of getAdditionalInfo
 
     async getFollowers(){
+
         try {
+
             let userFollows = {
 
                 num_of_followers : (await this.query('SELECT follow_id FROM follow WHERE user_two_id = ?', [this.args.user_id])).length, // Get Number Of Followers Following This User
@@ -243,8 +254,11 @@ exports.user = class User extends Database{
                 isFollower : (await this.query('SELECT follow_id FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.args.view_id, this.args.user_id])).length == 1 ? true : false // Is This Viewer Following User
     
             };
+
             return new Promise((resolve, reject) => {
+
                 resolve(userFollows);
+
             });
     
         } catch (error) {
@@ -252,24 +266,23 @@ exports.user = class User extends Database{
             console(error);
             
         }
+
     } // End Of getFollowers
 
 } // End Of Class Def
 
-// let usr = new exports.user(1, 1, 0);
-// usr.formatter((data) => {
-//     console.log(JSON.stringify(data));
-// }, true);
+
 
  // This Following Class Is Used To Return Both Posts And Comments To A Post 
 
-exports.posts = class posts extends Database{
+exports.posts = class post extends Database{
 
     constructor(cxt, userId = 0, postId = 0){
 
         super();
 
         this.args = {};
+
         this.args.context = cxt;
 
         if(this.args.context == 1){
@@ -279,11 +292,13 @@ exports.posts = class posts extends Database{
         }else if(this.args.context == 2){
 
             this.args.sql = 'SELECT * FROM posts WHERE user_id = ?';
+
             this.args.user_id = userId;
 
         }else if(this.args.context == 3){
 
             this.args.sql = 'SELECT * FROM comments WHERE post_id = ?';
+
             this.args.post_id = postId;
 
         }
@@ -327,6 +342,7 @@ exports.posts = class posts extends Database{
         } // End Of Query And ForEach Loop
 
          this.response.list = this.response.posts.length > 0 ? true : false; // Notify That Posts Where Found Or Not
+         
          this.response.error = false; // Was There An Error?
 
           callback(this.response); // Callback Function To Play With The Data
@@ -342,9 +358,3 @@ exports.posts = class posts extends Database{
     } // End Of getPosts
 
 } // End Of Class Posts Definition
-
-// let posts = new exports.posts(1);
-
-// posts.getPosts(0, (data) => {
-//     console.log(data);
-// });
