@@ -59,7 +59,7 @@ app.get('/user/:username', (request, response) => {
 
     login.accessor((data) => {
 
-        response.send(JSON.stringify(data));
+        response.json(data);
 
         response.end();
 
@@ -86,9 +86,11 @@ app.get('/user/:username', (request, response) => {
 
     let user = new api.user(1, username, /* session! */0);
 
-    user.formatter((info) => {
+    user.formatter((data) => {
 
-        response.send(JSON.stringify(info));
+        response.json(data);
+        
+        response.end();
 
     }, true);
 
