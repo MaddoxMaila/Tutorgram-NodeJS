@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title> Tutorgram | Login </title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<link rel="stylesheet" type="text/css" href="http://localhost:5000/static/css/bootstrap.css"/>
+	<meta charset="utf-8" />
+
+</head>
+<body style="background-color: #F2F4F4;">
+	
+	 <script type="text/javascript" src="http://localhost:5000/static/js/jquery-3.2.1.min.js"></script>
+	 <script type="text/javascript" src="http://localhost:5000/static/js/bootstrap.js"></script>
+	 <script type="text/javascript" src="http://localhost:5000/static/js/attack.js"></script>
+
+	<div class="container-fluid">
+
+		<div class="row">
+
+			<div class="col-md-4"></div>
+
+			<div class="col-md-4" class="login">
+
+				<div class="panel panel-default" style="margin-top: 45px;">
+
+					<div class="panel-body">
+
+						<center>
+
+							<img src="../images/logo.png" width="100">
+
+					    	<h2 class="text-important" style="color: #85C1E9;">Sign In</h2>
+
+						</center>
+
+						<form id="loginform" name="loginform">
+
+							<center>
+
+								<span id="EmailError" style="color: #E74C3C;"></span>
+
+								<div class="form-group" style="width:300px;">
+
+									<input id="email" style="border:0.1em solid  #85C1E9;" type="email" id="username" name="email" class="form-control" placeholder="Email">
+
+								</div>
+
+								<span id="PasswordError" style="color:#E74C3C;"></span>
+
+								<div class="form-group" style="width:300px;">
+
+									<input id="password" style="border:0.1em solid  #85C1E9;" id="password" type="password" name="password" class="form-control" placeholder="Password">
+
+								</div>
+
+							</center>
+
+							<div class="checkbox" style="margin-left: 49px;">
+
+								<label class="remeber" style="color:  #85C1E9;">
+
+									<input type="checkbox">Remeber me
+
+								</label>
+
+							</div>
+
+							<center>
+
+								<button id="login" class='sign-in' style="width: 250px; color: #85C1E9; border:0.15em solid #AED6F1;border-radius: 5px; " type="submit" class="btn btn-default">
+								Sign in
+							  </button>
+
+							</center>
+
+							<hr>
+
+							<center>
+
+								<span style="color:  #85C1E9;">New to Tutorgram?</span>
+
+							</center>
+
+						</form>
+
+
+							<hr>
+
+						<center>
+
+								<button style="width: 180px; color:  #85C1E9; border:0.15em solid #AED6F1; border-radius:5px;" class="btn btn-default">
+								   Create Account
+								 </button>
+
+								 </center>
+
+					</div>
+
+				</div>
+
+			</div>
+			<div class="col-md-4"></div>
+		</div>
+	</div>
+	<div id="text"></div>
+</body>
+<script type="text/javascript">
+
+	DOM.get('.sign-in').onclick = (e) => {
+
+		e.preventDefault();
+
+		console.log('hello worodl');
+
+		var email = document.forms["loginform"]["email"];
+	  var password = document.forms["loginform"]["password"];
+
+		 if(__FormValidate()) {
+
+		  	 __EchoError('#EmailError', 'Fill In All Login Fields');
+
+		  } else {
+
+		  	HTTP.set('POST', '/api/login/', new FormData(DOM.get('#loginform'))).request((response) => {
+
+		  		alert(response.message);
+
+		  	}, {need_progress_bar : false});
+
+		  }
+
+	};
+
+	function __EchoError(selector, error){
+
+		DOM.html(selector, error);
+
+	}
+
+	function __FormValidate() {
+
+	   return (email.value == '' || password.value == '') ? true : false;
+
+	}
+
+	
+			
+</script>
+</html>

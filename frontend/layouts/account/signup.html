@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Sign up</title>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<link rel="stylesheet" type="text/css" href="http://localhost:5000/static/css/bootstrap.css"/>
+	<meta charset="utf-8" />
+
+</head>
+<body style="background-color: #F2F4F4;">
+
+	<script type="text/javascript" src="http://localhost:5000/static/js/jquery-3.2.1.min.js"></script>
+	 <script type="text/javascript" src="http://localhost:5000/static/js/bootstrap.js"></script>
+	 <script type="text/javascript" src="http://localhost:5000/static/js/attack.js"></script>
+
+	<div class="container-fluid">
+
+		<div class="row">
+
+			<div class="col-md-4 hidden-xs-down"></div>
+
+			<div class="col-md-4 col-xs-12">
+
+				<div class="panel panel-default" style="margin-top: 45px;">
+
+					<div class="panel-body">
+
+						<center>
+
+							<img src="../images/logo.png" width="100">
+
+					    	<h2 class="text-important" style="color: #85C1E9;">Sign up</h2>
+
+						</center>
+
+						<form class="signupform">
+
+							<center>
+
+								<div class="form-group" style="width:300px;">
+
+									<input style="border:0.1em solid  #85C1E9;" type="text" name="fullname" class="form-control" class="fullname" placeholder="Fullname">
+
+								</div>
+
+								<div class="form-group" style="width:300px;">
+
+									<input style="border:0.1em solid  #85C1E9;" type="text" name="username" class="form-control" placeholder="Username">
+
+								</div>
+
+							</center>
+							
+							<center>
+
+								<div class="form-group" style="width:300px;">
+
+									<input style="border:0.1em solid  #85C1E9;" type="email" name="email" class="form-control" placeholder="Email">
+
+								</div>
+
+								<div class="form-group" style="width:300px;">
+
+									<input style="border:0.1em solid  #85C1E9;" type="password" name="password" class="form-control" placeholder="Password">
+
+								</div>
+
+								<div class="form-group" style="width:300px;">
+
+									<input style="border:0.1em solid  #85C1E9;" type="password" name="repassword" class="form-control" placeholder="ReType Password">
+
+								</div>
+
+							</center>
+
+							<div style="margin-left: 49px; margin-bottom: 12px;">
+
+								<span style="color:  #85C1E9;">Gender</span>
+
+								<label class="checkbox-inline">
+
+									<input type="checkbox" name="gender" value="male">Male
+
+								</label>
+
+								<label class="checkbox-inline">
+
+									<input type="checkbox" name="gender" value="female">Female
+
+								</label>
+
+							</div>
+
+							<center>
+
+								<button style="width: 180px; color:  #85C1E9; border:0.15em solid #AED6F1; border-radius:5px;" type="submit" name="signup" class="submit" class="btn btn-default">Create Account</button>
+
+							<hr>
+
+							<center>
+
+								<span style="color:  #85C1E9;">Already have an Account?<a href="../login/login_user.php">Sign in</a>
+
+								</span>
+
+							</center>
+
+							<hr>
+
+						</center>
+
+						</form>
+
+					</div>
+
+				</div>
+
+			</div>
+
+			<div class="col-md-4 hidden-xs-down"></div>
+
+		</div>
+
+	</div>
+
+</body>
+
+<script>
+
+	// document.querySelector('.CreateBtn').addEventListener('click',(e)=>function(){
+	// 	e.preventDefault();
+
+	// });
+
+
+	$(document).ready(function(){
+		
+		$(".submit").on('submit',(function(e){
+			e,preventDefault();
+			var fullname = $(".fullname").val();
+			var username = $(".username").value;
+			var email = $(".email").value;
+			var password = $(".password").value;
+			var repassword = $(".repassword").value;
+			
+			if(fullname == "" || username == "" || email == "" || password == "" || repassword == ""){
+				alert("Please fill all fields");
+			}else{
+				var data = {"fullname" : fullname, "email" : email, "username" : username, 
+				"password" : password, "repassword" : repassword};
+				$.ajax({
+					type : "POST",
+					url : "register_user.php",
+					data : data,
+					cache : false,
+					success : function(data){
+						alert(data);
+					}
+				});
+			}
+		});
+	});
+</script>
+</html>
