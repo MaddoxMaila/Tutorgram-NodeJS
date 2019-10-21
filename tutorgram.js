@@ -2,6 +2,8 @@
 const express = require('express');
 const api = require('./api/api.js');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const formidable = require('formidable');
 
 const app = express();
 
@@ -24,7 +26,15 @@ app.use(bodyParser.urlencoded({extended : true}));
 
 app.get('/login', (request, response) => {
 
-    response.sendFile(`${FrontEndLayouts}/account/login.html`, {root : __dirname});
+    if(request.session.userId){
+        
+        request.redirect('/home');
+        
+    }else{
+        
+        response.sendFile(`${FrontEndLayouts}/account/login.html`, {root : __dirname});
+        
+    }
 
 });
 
@@ -54,17 +64,37 @@ app.get('/user/:username', (request, response) => {
  */
 
  app.post('/api/login/', (request, response) => {
-
-    let login = new api.login(request.body.email, request.body.response);
-
-    login.accessor((data) => {
-
-        response.json(data);
-
-        response.end();
-
-    });
-
+     
+     const form = new formidable.IncomingForm();
+     
+     form.parse((err, fields, files) => {
+         
+         if(err) throw err;
+         
+         if(fields.email == '' || fields.password == '') {
+                 
+                  request.json({error : true, message : "Use Our Form To Login"});
+             
+            }else{
+               
+                let login = new api.login(fields.email, fields.password);
+                
+                login.accessor((data) => {
+                   
+                    if(data.logged){
+                        
+                        request.session.userId = data.user.user_id;
+                        
+                    }
+                    
+                    request.json(data);
+                    request.end();
+                    
+                });
+            }
+         
+     });  // End Of Parse
+    
  }); // End Of API Login Route
 
  app.get('/api/posts', (request, response) => {
