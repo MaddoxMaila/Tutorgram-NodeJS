@@ -60,6 +60,164 @@ class Database{
 
 }
 
+
+exports.quick = class Quick extends Database {
+
+    constructor(username){
+
+        super();
+
+        this.username = username;
+
+    }
+
+    async convertUsername(callback){
+
+        try {
+
+            let obj = (await this.query('SELECT user_id FROM users WHERE username = ?', [this.username]));
+        
+            callback((obj.length > 0) ? obj[0] : {user_id : 0});
+
+        } catch(e) {
+
+            // statements
+            console.log(e);
+
+        }
+
+    }
+
+}
+
+// let q = new exports.quick("maddo");
+
+// q.convertUsername((data) => {
+//     console.log(data);
+// })
+
+
+exports.createAccount = class Register extends Database {
+
+    constructor(userdata){
+
+        super();
+
+        this.account = {
+
+            username : userdata.username, 
+            email : userdata.email, 
+            password : userdata.password
+
+        };
+
+        this.user = [this.account.username, this.account.email, "student", new Date(), this.account.password, null];
+
+        this.starter = [0, "", "", "", "", ""];
+
+        this.images = [0, "http://localhost:5000/cdn/images/default.png", "profile", null];
+        this.covers = [0, "http://localhost:5000/cdn/images/cover.png", "cover", null];
+
+                          // [0, "http://localhost:5000/cdn/images/default_cover.png", "cover", null]
+
+                    
+
+    } // End Of Constructor
+
+    async create(callback){
+
+        let resp = null;
+
+        if((await this.isTaken({column : "username", value : this.account.username})) == false && (await this.isTaken({column : "email", value : this.account.email})) == false){
+
+            let results = await this.query(`INSERT INTO users VALUES(?, ?, ?, ?, ?, ?)`, this.user);
+
+               if(results.affectedRows == 1){
+
+                   this.starter[0] = results.insertId;
+
+                   this.images[0] = results.insertId;
+
+                   this.covers[0] = results.insertId;
+
+                   if((await this.starterPack())){
+
+
+                       resp = this.onResp(false, true, '/home/');
+
+                       resp.user = (await this.query('SELECT username, email, user_id FROM users WHERE user_id = ?', results.insertId))[0];
+
+                   }else{
+
+                       resp = this.onResp(true, false, "Starter Pack Failed!");
+
+                   }
+
+               }else{
+
+
+                  resp = this.onResp(true, false, results.affectedRows + " : Rows Are Affected!");
+                  
+               } // Second If
+
+          }else{
+
+
+            resp = this.onResp(true, false, "Either Email Or Username Is Taken, Choose Another One");
+
+          } // First If
+
+
+          callback(resp);
+
+     } // End Of Create
+
+     onResp(e, c, m){
+
+        return {
+            error : e,
+            created : c,
+            message : m
+        };
+
+     } // End Of OnResp
+
+    // To Check If Theres Already An Account Using This Username/ Email
+
+    async isTaken(args){
+
+        let bool = (await this.query(`SELECT user_id FROM users WHERE ${args.column} = ?`, [args.value])).length > 0 ? true : false;
+
+        console.log(bool)
+        return new Promise((resolve, reject) => {
+
+            resolve(bool);
+
+        });
+
+    } // End Of isTaken()
+
+    async starterPack(){
+
+        let bioBool = (await this.query('INSERT INTO bio VALUES(?, ?, ?, ?, ?, ?)', this.starter)).affectedRows == 1 ? true : false;
+
+        let imgBool = (await this.query('INSERT INTO user_images VALUES(?, ?, ?, ?)', this.images)).affectedRows == 1 ? true : false;
+
+        let coverBool = (await this.query('INSERT INTO user_images VALUES(?, ?, ?, ?)', this.covers)).affectedRows == 1 ? true : false;
+        
+        let bool = (bioBool == true && imgBool == true && coverBool == true) ? true : false; // Rows Added Successfully!!
+
+        return new Promise((resolve, reject) => {
+
+            resolve(bool);
+
+        });
+        
+
+    } // End Of starterPack()
+
+}
+
 exports.login = class UserLogin extends Database {
 
     constructor(email, password){
@@ -74,23 +232,26 @@ exports.login = class UserLogin extends Database {
 
         try{
 
-            let results = await this.query('SELECT username, email, account_type, account_date, user_id FROM users WHERE email =? AND user_pass = ?', this.credentials);
+            let results = await this.query('SELECT username, email, account_type, account_date, user_id FROM users WHERE email = ? AND user_pass = ?', this.credentials);
+            
             if(results.length === 1){
                 // This Credentials Are Correct, Log User In
                 this.response =  {
                     error : false,
                     logged : true,
-                    message : "Login Successful, You're Now Logged In",
+                    resp : results.length, 
+                    message : "/home",
                     user: results[0]
                 };
 
             }else if(results.length <= 0 || results.length > 0){
 
                 this.response =  {
-                    error : false,
+                    error : true,
                     logged : false,
+                    resp : results.length, 
                     message : "Login Unsuccessful, Check Your Login Details To Check If They Are Correct"
-                }
+                };
 
             }
 
@@ -111,7 +272,7 @@ exports.login = class UserLogin extends Database {
 //    console.log(data);
 // });
 
-exports.user = class User extends Database{
+exports.user = class User extends Database {
 
     constructor(context, userId, viewerId = 0){
 
@@ -122,10 +283,11 @@ exports.user = class User extends Database{
             context : context,
             user_id : userId,
             view_id : viewerId,
-            p_picture : 'profile_picture',
-            c_picture : 'cover_picture'
+            p_picture : 'profile',
+            c_picture : 'cover'
 
         }; // End Of Class Object
+
     } // End Of Constructor
 
     async getUserInteration(){
@@ -176,12 +338,14 @@ exports.user = class User extends Database{
 
     // Organise The User Data Collected And Return It
 
-    async formatter(callback, outside){
+    async info(callback, outside){
         
         let gatheredUserInfo = {
+
             user_info : await this.getUserInfo(),
             user_stats : await this.getFollowers(),
             user_interact : await this.getUserInteration()
+
         };
 
         if(outside){
@@ -219,9 +383,9 @@ exports.user = class User extends Database{
                 
                 bio : (await this.query('SELECT * FROM bio WHERE user_id = ?', [this.args.user_id]))[0], // Get            Additional Info
     
-                profile_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.p_picture]))[0], // Get User Profile Picture
+                profile_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.p_picture]))[0].image_url, // Get User Profile Picture
     
-                cover_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.c_picture]))[0], // Get User PRofile Cover Picture
+                cover_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.c_picture]))[0].image_url, // Get User PRofile Cover Picture
     
             };
 
@@ -281,9 +445,11 @@ exports.posts = class post extends Database{
 
         super();
 
-        this.args = {};
+        this.args = {
 
-        this.args.context = cxt;
+            context : cxt
+
+        };
 
         if(this.args.context == 1){
 
@@ -331,7 +497,7 @@ exports.posts = class post extends Database{
 
                 },
 
-                user : (await User.formatter(null, false)),
+                user : (await User.info(null, false)),
 
 
 
@@ -358,3 +524,68 @@ exports.posts = class post extends Database{
     } // End Of getPosts
 
 } // End Of Class Posts Definition
+
+
+exports.follows = class Follows extends Database {
+
+    constructor(args){
+
+        super();
+
+        this.local = args;
+
+        if(this.local.context == 1){
+            /*
+
+            user_one_id int not null,
+            user_two_id int not null,
+            follow_type text not null,
+            follow_state text not null,
+            follow_date text not null,
+            follow_id int not null PRIMARY KEY AUTO_INCREMENT
+            */
+
+            this.local.sql = 'INSERT INTO follow VALUES(?, ?, ?, ?, ?, ?)';
+            this.local.data = [this.local.user_one_id, this.local.user_two_id, 'follow', 'follow', new Date(), null];
+
+        }
+
+    } // End Of Constructor
+
+
+    async followUser(callback){
+
+        let resp = {};
+
+        let row = (await this.query('SELECT * FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.local.user_one_id, this.local.user_two_id]));
+
+          if(row.length == 1){
+
+             // Means You Logged In User Already Follows This User
+             // Means User Is Unfollowing
+
+             resp.message = ((await this.query('DELETE * FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.local.user_one_id, this.local.user_two_id])).affectedRows == 1) ? 'Follow' : 'Unfollow Error';
+
+          }else if(row.length == 0){
+
+             // Means Logged In User Doesnt Follow This User Yet
+             // Means User Is Trying To Follow
+
+              resp.message = ((await this.query(this.local.sql, this.local.data)).affectedRows == 1) ? 'Unfollow' : 'Follow Error';
+
+          }else{
+
+            resp.message = 'MessageLess';
+
+          }
+
+          resp.error = false;
+
+          resp.count.followers = (await this.query('SELECT follow_id FROM follow WHERE user_two_id = ?', [this.local.user_two_id])).length;
+          resp.count.following = (await this.query('SELECT follow_id FROM follow WHERE user_one_id =?', [this.local.user_two_id])).length;
+
+          callback(resp);
+
+    } // End Of Follow User
+
+} // End Of Follows
