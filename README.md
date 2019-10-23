@@ -18,16 +18,16 @@ This File Is The Entry Point Of The System. tutorgram.js Has Two Parts, Routes F
     
 # 1. Web Page Routes
 
-  #Home : '/home/'\n
-  #Login : '/login/'\n
-  #Signup : '/signup/'\n
+  #Home : '/home/'
+  #Login : '/login/'
+  #Signup : '/signup/'
   #Profile : '/user/:username/'
   
 # 2. API Routes
 
-   $route = '/api/'\n
+   $route = '/api/'
    
-   #Login : $route.'/login/' \n
+   #Login : $route.'/login/'
        Returns {error: '', 'message', user : {Logged In User Data}}
 
 
