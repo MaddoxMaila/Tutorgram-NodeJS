@@ -27,8 +27,15 @@ This File Is The Entry Point Of The System. tutorgram.js Has Two Parts, Routes F
 
    $route = '/api/'
    
-   #Login : $route.'/login/'
-       Returns {error: '', 'message', user : {Logged In User Data}}
+       #Login : $route.'/login'
+              Returns {error: '', 'message', user : {Logged In User Data}}
+              
+       #User Profile : $route.'/user/:username'
+              Returns {user : user_info :{ bio : {}, profile_pic : {}}}
+              
+       #Follow : $route.'/follow/'
+       
+       #
 
 
 
