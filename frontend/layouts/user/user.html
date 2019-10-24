@@ -2,45 +2,361 @@
 <html>
   <head>
 	<title id="tg-title"> Tutorgram </title>
-	<link rel="stylesheet" type="text/css" href="static/css/bootstrap.css" />
-	<link rel="stylesheet" type="text/css" href="static/css/styles.tutorgram.css"/>
+	<link rel="stylesheet" type="text/css" href="http://localhost:5000/static/css/bootstrap.css"/>
+	<link rel="stylesheet" type="text/css" href="http://localhost:5000/static/css/styles.tutorgram.css"/>
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta charset="utf-8" />
     <style type="text/css">
-      
+
+       /*                              DESKTOP STYLES                                                     */
+
+        @media only screen and (min-width: 701px){
+
+           .tg-user-info{
+              width: 65%;
+              margin: auto;
+              margin-top : -5%;
+              border: .03em solid #111;
+              height: auto;
+              background-color: #fff;
+              box-shadow: 0px 2px 2px 0px #111;
+              border-radius: .5%;
+              z-index: 9999 !important;
+           }
+
+        }
+
+       /*                              MOBILE STYLES                                                         */
+
+        @media only screen and (max-width: 700px){
+
+        }
+
+        /*                             UNIVERSAL STYLES                                                      */
+
+        .tg-cover-body{
+          width: 100%;
+          border: .01em solid #5bc0de;
+          height: 280px;
+        }
+        .user-nav-icon{
+          font-size: 19pt;
+          font-weight: 900;
+          color: #111;
+        }
+
     </style>
   </head>
   <body id="main">
-      <script src="static/js/jquery-3.2.1.min.js"></script>
-      <script src="static/js/bootstrap.js"></script>
-      <script src="static/js/attack.js"></script>
+
+     <script type="text/javascript" src="http://localhost:5000/static/js/jquery-3.2.1.min.js"></script>
+     <script type="text/javascript" src="http://localhost:5000/static/js/bootstrap.js"></script>
+     <script type="text/javascript" src="http://localhost:5000/static/js/mansory.js"></script>
+     <script type="text/javascript" src="http://localhost:5000/static/js/attack.js"></script>
+
+     <script diff src="http://localhost:5000/static/js/main.tutorgram.js"></script>
+
     
     <div class="tg-cover-body">
 
-        <img alt="user cover photo" class="tg-user-cover" />
+      <label class="cover-label" for="changeCover" style="position: relative; bottom: -86%;left:0.5%;display: none">
+        
+         <a class="btn btn-default">
+           <span class="glyphicon glyphicon-camera"></span>
+         </a>
+
+      </label>
 
     </div>
     
     <div class="tg-user-info">
-        <table class="table-bordered tg-table">
+        
+        <div class="media">
+          
+           <div class="media-left" style="padding-left: 2%;">
 
-            <tr>
-                <td class="tg-block tg-user-profile-picture">
+            <br />
+              
+             <a class="tg-img-button">
+               
+               <img height="120" width="120" class="media-object img-circle tg-profile-pic">
 
-                </td>
-                <td class="tg-block tg-user-actions">
+             </a>
 
-                </td>
-            </tr>
+           </div>
 
-        </table>
+           <div class="media-body" style="padding-left: 2%">
+
+             <br />
+            
+              <table class="tg-table table-bordered">
+                 
+                 <tr>
+                   
+                   <td class="tg-tab name-tab" >
+                     
+                     <a class="tg-user-link">
+                       
+                       <span class="tg-bold-text user-name">
+                         
+                       </span>
+
+                     </a>
+
+                   </td>
+
+                   <td class="tg-tab tg-dynamic-tab tg-icon-btn-tab">
+
+                   </td>
+
+                   <td class="tg-tab edit-tab tg-icon-btn-tab">
+                      
+                      
+
+                   </td>
+                   <td class="tg-tab settings-tab tg-icon-btn-tab">
+                      
+                      
+
+                   </td>
+
+                 </tr>
+
+              </table>
+
+              <br />
+
+              <div class="tg-user-bio">
+
+                  &nbsp;&nbsp;&nbsp;
+                  <span class="glyphicon glyphicon-map-marker"></span>
+                  <span class="tg-grey-text tg-user-location"></span>
+
+                  &nbsp;&nbsp;&nbsp;
+
+                  <span class="glyphicon glyphicon-calendar"></span>
+                  <span class="tg-grey-text tg-user-join"></span>
+
+                  &nbsp;&nbsp;&nbsp;
+
+                  <span class="glyphicon glyphicon-link"></span>
+                  <span class="tg-grey-text tg-user-contact"></span>
+                  
+                <div class="tg-user-dynamic-info container-fluid">
+                  
+                </div>
+
+              </div>
+
+                <br />
+                <br />
+
+              <table class="tg-table table-bordered">
+                
+                <tr>
+                  
+                  <td class="tg-tab tg-follow-tab">
+                     
+                     <center>
+                       
+                       <a class="tg-followers-btn" id="btn-follow">
+                       
+                       <span class="followers-count tg-max-text"></span>
+                       <span class="tg-grey-text">Followers</span>
+
+                     </a>
+
+                     </center>
+
+                  </td>
+                  <td class="tg-tab tg-follow-tab">
+                    
+                     <center>
+                       
+                       <a class="tg-followers-btn " id="btn-following">
+                       
+                       <span class="following-count tg-max-text"></span>
+                       <span class="tg-grey-text">Following</span>
+
+                     </a>
+
+                     </center>
+
+                  </td>
+                  <td><td>
+                  <td></td>
+                  <td class="tg-tab user-follow-btn">
+                    
+
+                  </td>
+
+                </tr>
+
+              </table>
+
+              <br />
+
+           </div>
+
+        </div>
+
     </div>
 
-    <div class="tg-user-bio">
+    <div class="tg-user-view container-fluid">
+       
+       <div class="row">
+         
+         <div class="col-md-1"></div>
+         <div class="col-md-10">
+            
+            <br />
+            <center>
+              <div class="tg-user-navigation-icons inherit">
+              
+              <table class="table-bordered" style="height:  45px;width: 75%">
+                
+                  <tr>
+                    
+                    <td class="tg-icon-nav-tab item-list-tab">
+
+                      <center>
+                        <a class="item-list user-nav-icon">
+                          <span class="glyphicon glyphicon-list"></span>
+                        </a>
+                      </center>
+
+                    </td>
+                    <td class="tg-icon-nav-tab item-grid-tab">
+                      
+                       <center>
+                        <a class="item-grid user-nav-icon">
+                          <span class="glyphicon glyphicon-th"></span>
+                        </a>
+                      </center>
+
+                    </td>
+                    <td class="tg-icon-nav-tab item-pinned-tab">
+                      
+                       <center>
+                        <a class="item-pinned user-nav-icon">
+                          <span class="glyphicon glyphicon-pushpin"></span>
+                        </a>
+                       </center>
+
+                    </td>
+
+                    <td class="tg-icon-nav-tab heart-list-tab">
+
+                      <center>
+                        <a class="heart-list user-nav-icon">
+                          <span class="glyphicon glyphicon-heart-empty"></span>
+                        </a>
+                      </center>
+
+                    </td>
+
+                  </tr>
+
+              </table>
+
+            </div>
+            </center>
+
+            <br />
+
+            <div class="panel panel-default">
+              <div class="panel-body tg-viewport">
+
+              </div>
+            </div>
+         </div>
+         <div class="col-md-1"></div>
+
+       </div>
 
     </div>
+    <script type="text/javascript">
+      
+      let user = {};
 
-    <script src="static/js/main.tutorgram.js"></script>
+      let form = new FormData();
+
+      form.append('context', 1);
+      form.append('viewer_id', isLogged.id);
+      HTTP.set('GET', `/api/user/${window.location.pathname.substr(6)}`,form).request((resp) => {
+
+        user = resp.user_info;
+
+        DOM.get('.user-name').textContent = user.user.username;
+
+        DOM.get('.followers-count').textContent = resp.user_stats.num_of_followers;
+
+        DOM.get('.following-count').textContent = resp.user_stats.num_of_following;
+
+        DOM.html('.tg-user-join', 'Joined On ' + user.user.account_date);
+        DOM.html('.tg-user-contact', user.user.email);
+        DOM.html('.tg-user-location', user.bio.user_address);
+
+        DOM.get('.tg-cover-body').style.backgroundImage = `url(${user.cover_picture.image_url})`;
+
+        DOM.get('.tg-profile-pic').src = user.profile_picture.image_url;
+
+        DOM.get('.tg-user-link').href = `/user/${user.user.username}`;
+
+               if(isLogged.id == user.user.user_id){                       // Check If User Viewing Page Is The One Logged In!
+
+                   DOM.get('.cover-label').style.display = 'inline-block';
+
+                   // Settings Button
+
+                   let SettingsBtn = DOM.create('button', 'btn btn-default');
+                   SettingsBtn.append(DOM.span({class : 'glyphicon glyphicon-cog', text : ''}));
+
+                   DOM.get('.settings-tab').append(DOM.center(SettingsBtn));
+
+
+                   // Edit Profile 
+
+                   let EditBtn = DOM.create('button', 'btn btn-default');
+                   EditBtn.append(DOM.span({class : 'tg-user-edit', text : 'Edit Profile'}));
+
+                   DOM.get('.edit-tab').append(DOM.center(EditBtn));
+
+               }else{
+
+                  if(user.user.account_type == 'student'){
+
+                    DOM.html('.tg-dynamic-tab', '<center><samp class="tg-min-grey-text">Student</samp></center>');
+
+                  }
+
+                  DOM.get('.user-follow-btn').style.width = '12%';
+                  DOM.get('.user-follow-btn').append(ui.followBtn({
+
+                    text : (resp.user_stats.isFollower) ? 'Follow' : 'UnFollow',
+                    user_id : isLogged.id,
+                    follow_user_id : user.user.user_id,
+                    center : true
+
+                  },(data) => {                                       // CallBack Function
+
+                     DOM.html('.followers-count', data.count.followers);
+                     DOM.html('.following-count', data.count.following);
+
+                  }));                                                // Put Follow Button On Page And Implement Its Callback Function
+
+               }
+
+               ui.showFollows(DOM.get('#btn-follow'), {context : 2, logged_id : isLogged.id, user_id : user.user.user_id, view : '.tg-viewport', name : user.user.username});
+               ui.showFollows(DOM.get('#btn-following'), {context : 3, logged_id : isLogged.id, user_id : user.user.user_id, view : '.tg-viewport', name : user.user.username});
+
+               form = null;
+
+      }, bar);
+
+
+
+    </script>
   </body>
 </html>
