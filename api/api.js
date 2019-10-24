@@ -1,4 +1,5 @@
 const mysql = require('mysql');
+const FileSystem = require('fs');
 
 
 class Database{
@@ -71,11 +72,26 @@ exports.quick = class Quick extends Database {
 
     }
 
+    async convertUserId(callback){
+
+        try {
+            
+            let obj = (await this.query('SELECT username FROM users WHERE user_id = ?', [this.username]));
+
+            callback((obj.length > 0) ? obj[0] : {username : 0})
+
+        } catch (e) {
+
+            console.log(e);
+            
+        }
+    }
+
     async convertUsername(callback){
 
         try {
 
-            let obj = (await this.query('SELECT user_id FROM users WHERE username = ?', [this.username]));
+            let obj = (await this.query('SELECT user_id FROM users WHERE username = ? ', [this.username]));
         
             callback((obj.length > 0) ? obj[0] : {user_id : 0});
 
@@ -168,7 +184,21 @@ exports.createAccount = class Register extends Database {
           } // First If
 
 
-          callback(resp);
+          if(resp.created == true && resp.error == false){
+
+            let dir = new FileUpload({username : resp.user.username});
+
+            let res = (await dir.makeUserDir());
+
+            resp.dir = res.created;
+
+            callback(resp);
+
+          }else{
+
+            callback(resp);
+
+          }
 
      } // End Of Create
 
@@ -383,9 +413,9 @@ exports.user = class User extends Database {
                 
                 bio : (await this.query('SELECT * FROM bio WHERE user_id = ?', [this.args.user_id]))[0], // Get            Additional Info
     
-                profile_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.p_picture]))[0].image_url, // Get User Profile Picture
+                profile_picture : ((await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.p_picture]))[0]), // Get User Profile Picture
     
-                cover_picture : (await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.c_picture]))[0].image_url, // Get User PRofile Cover Picture
+                cover_picture : ((await this.query('SELECT image_url FROM user_images WHERE user_id = ? AND type = ?', [this.args.user_id, this.args.c_picture]))[0]), // Get User PRofile Cover Picture
     
             };
 
@@ -534,7 +564,7 @@ exports.follows = class Follows extends Database {
 
         this.local = args;
 
-        if(this.local.context == 1){
+        if(this.local.context == 1){                           // For Following And Unfollowing
             /*
 
             user_one_id int not null,
@@ -548,9 +578,55 @@ exports.follows = class Follows extends Database {
             this.local.sql = 'INSERT INTO follow VALUES(?, ?, ?, ?, ?, ?)';
             this.local.data = [this.local.user_one_id, this.local.user_two_id, 'follow', 'follow', new Date(), null];
 
+        }else if(this.local.context == 2){                    // For Checking Followers
+
+            this.local.sql = 'SELECT * FROM follow WHERE user_two_id = ?';
+            this.local.data = [this.local.user_two_id];
+
+
+        }else if(this.local.context == 3){                    // For Checking Following
+
+            this.local.sql = 'SELECT * FROM follow WHERE user_one_id = ?';
+            this.local.data = [this.local.user_two_id];
+
         }
 
     } // End Of Constructor
+
+    async whoFollows(callback){
+
+        let resp = {};
+
+        let rows = (await this.query(this.local.sql, [this.local.data]));
+
+          if(rows.length == 0){                               // This User Has No Followers!
+
+               resp.count = 0;
+               resp.message = 'Has No Followers';
+
+          }else{                                              // Has Atleast More Than One User
+
+               resp.count = rows.length;
+               resp.users = [];
+
+                for(let i = 0; i < rows.length; i++){
+
+
+                   let User = new exports.user(1, rows[i].user_two_id, this.local.user_one_id);
+
+                   let info = {};
+
+                   info.usr =  (await User.info(null, false));
+
+                   resp.users.push(info);
+
+               }
+
+          }
+
+          callback(resp);
+
+    } // End Of Followers
 
 
     async followUser(callback){
@@ -564,7 +640,7 @@ exports.follows = class Follows extends Database {
              // Means You Logged In User Already Follows This User
              // Means User Is Unfollowing
 
-             resp.message = ((await this.query('DELETE * FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.local.user_one_id, this.local.user_two_id])).affectedRows == 1) ? 'Follow' : 'Unfollow Error';
+             resp.message = ((await this.query('DELETE FROM follow WHERE user_one_id = ? AND user_two_id = ?', [this.local.user_one_id, this.local.user_two_id])).affectedRows == 1) ? 'Follow' : 'Unfollow Error';
 
           }else if(row.length == 0){
 
@@ -581,11 +657,253 @@ exports.follows = class Follows extends Database {
 
           resp.error = false;
 
-          resp.count.followers = (await this.query('SELECT follow_id FROM follow WHERE user_two_id = ?', [this.local.user_two_id])).length;
-          resp.count.following = (await this.query('SELECT follow_id FROM follow WHERE user_one_id =?', [this.local.user_two_id])).length;
+          resp.count = {
+
+               followers : (await this.query('SELECT follow_id FROM follow WHERE user_two_id = ?', [this.local.user_two_id])).length,
+               following : (await this.query('SELECT follow_id FROM follow WHERE user_one_id =?', [this.local.user_two_id])).length
+            
+            }
 
           callback(resp);
 
     } // End Of Follow User
 
 } // End Of Follows
+
+
+exports.react = class Reaction extends Database {
+
+    constructor(fields){
+
+        this.args = fields;
+
+        if(this.args.context == 1){
+
+            this.args.sql = 'SELECT like_id FROM post_likes WHERE user_id = ? AND post_id = ?';
+            this.args.data = [this.args.user_id, this.args.post_id];
+
+        }
+
+    }  // End OF Constructor
+
+    async like(callback){
+
+        let local = {};
+
+        let rows = (await this.query(this.args.sql, this.args.data));
+
+          if(rows.length == 0){   // User Is Liking
+
+
+               local.message = ((await this.query('INSERT INTO post_likes VALUES(?, ?, ?)', [this.args.user_id, this.args.post_id, null])).affectedRows == 1) ? 'Liked' : 'Like Error';
+
+
+          }else{                  // User Is Unliking
+
+               local.message = ((await this.query('DELETE FROM post_likes WHERE user_id = ? AND post_id = ?', [this.args.data])).affectedRows == 1) ? 'Unliked' : 'Unlike Error';
+
+          }
+
+          local.count = (await this.query('SELECT like_id FROM post_likes WHERE post_id = ?', [this.args.post_id])).length;
+
+          callback(local);
+
+    } // End Of like
+
+}
+
+class FileUpload{
+
+    constructor(file){
+
+        //console.log(FileSystem);
+        this.file = file;
+
+    }
+
+     moveFile(callback){
+
+        let moved = null;
+
+        if((this.makeUserDir()).created){
+
+                try {
+                    FileSystem.renameSync(this.file.path, this.file.newPath);
+
+                return {moved : true};
+                } catch(e) {
+                    // statements
+                    return {moved : false, error : e};
+                }
+
+            }else{
+
+                return {moved : false};
+
+            }
+
+    }
+
+    makeUserDir(){
+
+       try {
+          
+          let created = (FileSystem.mkdirSync(`C:/Users/Maddox/nodeApps/Tutorgram/cdn/cdn/${this.file.username}`)) ? true : false;
+
+          return {created : created};
+
+       } catch(e) {
+           // statements
+           return {created : true};
+       }
+
+    }
+}
+
+exports.ask = class Ask extends Database {
+
+    constructor(file){
+
+        super();
+
+       this.file = file;
+       this.file.url = '';
+
+       let type = (this.file.type == 'video/mp4' || this.file.type == 'video/mkv') ? 'video' : 'image';
+
+       this.local = {};
+       this.local.sql = 'INSERT INTO posts VALUES(?, ?, ?, ?, ?, ?, ?)';
+       this.local.data = [this.file.user_id, type, this.file.text, this.file.url, new Date(), 'hello', null];
+
+    }
+
+    async prepare(){
+        
+        //this.file.name = (this.file.type == 'video/mp4' || this.file.type == 'video/mkv') ? `${fileName}.mp4` : `${fileName}.png`;
+
+        this.file.url = `http://localhost:5000/cdn/${this.file.username}/${this.file.name}`;
+
+        this.local.data[3] = this.file.url;
+
+
+        this.file.newPath = `${this.file.newPath}\\cdn\\cdn\\${this.file.username}\\${this.file.name}`;
+
+        console.log(this.file);
+
+        const upload = new FileUpload(this.file);
+        let m = upload.moveFile();
+        if(m.moved){
+            console.log('Console Moved!');
+        }else{
+            console.log('Console Not Moved!!' + m.error);
+        }
+
+        return new Promise((resolve,reject) => {
+
+            resolve({moved : true});
+
+        });
+        
+    }
+
+    async add(callback){
+
+        let response = {};
+
+        if((await this.prepare()).moved){
+
+                let results = (await this.query(this.local.sql, this.local.data));
+
+                if(results.affectedRows == 1){
+
+                    response.uploaded = true;
+                    response.insert = true;
+                    response.error = false;
+                    response.message = 'File Uploaded Successful';
+                    response.ask = {};
+
+                    response.ask.post = (await this.query('SELECT * FROM posts WHERE post_id = ?', [results.insertId]))[0];
+
+                }else{
+                    
+                    response.uploaded = false;
+                    response.insert = false;
+                    response.error = true;
+                    response.message = 'File Upload Unsuccessful';
+                    response.ask = {};
+
+                }
+
+            }else{
+
+                response.uploaded = false;
+                response.insert = false;
+                response.error = true;
+                response.message = 'Moving File Failed Hard!';
+
+            }
+
+            callback(response);
+ 
+    } // End Of Add
+
+} // End Of Ask{}
+
+
+exports.search = class Search extends Database {
+
+    constructor(args){
+
+        super();
+
+        this.queryObj = args;
+
+        if(this.queryObj.context == 1){
+
+            this.queryObj.sql = 'SELECT user_id, username FROM users WHERE username LIKE ?';
+            this.queryObj.data = [`${this.queryObj.q}%`];
+
+        }
+
+    }
+
+    async get(callback){
+
+        let rows = (await this.query(this.queryObj.sql, this.queryObj.data));
+
+        let response = {};
+
+        if(rows.length > 0){
+
+            response.count = rows.length;
+            response.found = [];
+            response.message = 'Users Found!'
+
+            for(let i = 0; i < rows.length; i++){
+
+                let usr = new exports.user(rows[0].user_id, this.queryObj.user_id);
+
+                let info = (await usr.info(null, false));
+
+                response.found.push(info);
+
+                callback(response);
+
+
+            }
+
+        }else {
+
+            response.count = rows.length;
+            response.found = [];
+            response.message = 'No Users Found';
+
+            callback(response);
+
+        }
+
+    } // End Of Get
+
+
+} // End Of Search Definition
+
