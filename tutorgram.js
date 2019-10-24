@@ -55,15 +55,15 @@ app.get('/signup', (request, response) => {
 
 app.get('/home', (request, response) => {
 
-    if(request.session.userId){
+    // if(request.session.userId){
 
         response.sendFile(`${FrontEndLayouts}/home/home.html`, {root : __dirname});
 
-    }else{
+    // }else{
 
-        response.redirect('/login');
+    //     response.redirect('/login');
 
-    }
+    // }
 
 });
 
@@ -206,19 +206,19 @@ app.get('/session', (request, response) => {
 
         // console.log(request);
 
-        if(fields.context == ''){
+        if(fields.context == '' || fields.viewer_id == ''){
 
             response.json({error : true, message : "Hey, We See You, What You Trying To Do!!"});
             response.end();
             
         }else{
 
-            let quick = new API.quick(request.params.username);   // Convert The Url Username It's User Id Equivalent       
+            let quick = new API.quick(request.params.username);   // Convert The Url Username To It's User Id Equivalent       
 
             quick.convertUsername((data) => {
 
                                                                   // Call user API To Get Detailed User Info
-                let user = new API.user(fields.context, data.user_id, (request.session.userId) ? request.session.userId : 0);
+                let user = new API.user(fields.context, data.user_id, fields.viewer_id);
 
                 user.info((data) => {
 
@@ -251,16 +251,142 @@ app.get('/session', (request, response) => {
 
             let follow = new API.follows(fields);
 
-            follow.followUser((data) => {
+            if(fields.context == 1){                            // For Following OR Unfollowing
+
+                follow.followUser((data) => {
+
+                response.json(data);
+                response.end();
+
+              });
+
+            }else if(fields.context == 2 || fields.context == 3){
+
+                follow.whoFollows((data) => {
+
+                    response.json(data);
+                    response.end();
+
+                });                                              // End Of whoFollows
+
+            }else{                                               // Illegal Request!
+
+                response.json(notifier);
+                response.end();
+
+            }
+
+        }                                                         // End Of If
+
+    });                                                           // End Of Parse
+
+ });
+
+
+
+ app.get('/api/likes', (request, response) => {
+
+      form = new formidable.IncomingForm().
+
+
+      form.parse(request, (err, fields, files) => {
+
+          if(fields.context == '' || fields.user_id == '' || fields.post_id == ''){
+
+
+            response.json(notifier);
+            response.end();
+
+          }else{
+
+            let react = new API.react(fields);
+
+
+              if(fields.context == 1){
+
+                 react.like((data) => {
+
+                    response.json(data);
+                    response.end();
+
+                 });                                                       // End Of Callback 
+
+              }
+
+          }                                                                // End OF Filter If
+
+      });
+
+
+ });
+
+ app.post('/api/ask', (request, response) => {
+
+    form = new formidable.IncomingForm();
+
+    form.parse(request, (err, fields, files) => {
+
+        if(fields.ask_text == '' || fields.context == ''){
+
+            response.json(notifier);
+            response.end();
+
+        }else{
+
+            let quick = new API.quick(fields.user_id);
+
+            quick.convertUserId((res) => {
+
+                files.file.user_id = fields.user_id;
+                files.file.username = res.username;
+                files.file.text = fields.ask_text;
+                files.file.newPath = __dirname;
+
+                let ask = new API.ask(files.file);
+
+                ask.add((data) => {
+
+                    console.log(data);
+
+                    response.json(data);
+                    response.end();
+
+                });
+                
+            });
+
+        }
+
+    });
+
+ });   // End Of Ask Route
+
+ app.post('/api/search', (request, response) => {
+
+    form = new formidable.IncomingForm();
+
+    form.parse(request, (err, fields, files) => {
+
+        if(fields.context == '' || fields.user_id == '' || fields.q){
+
+            response.json(notifier);
+            response.end();
+
+        }else{
+
+            let query = new API.search(fields);
+
+            query.get((data) => {
 
                 response.json(data);
                 response.end();
 
             });
 
-        }                                                         // End Of If
+        }
 
-    });                                                           // End Of Parse
+    });
+
 
  });
 
