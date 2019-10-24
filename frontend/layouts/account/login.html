@@ -42,7 +42,7 @@
 
 								<div class="form-group" style="width:300px;">
 
-									<input id="email" style="border:0.1em solid  #85C1E9;" type="email" id="username" name="email" class="form-control" placeholder="Email">
+									<input style="border:0.1em solid  #85C1E9;" type="email" id="username" name="email" class="form-control" placeholder="Email">
 
 								</div>
 
@@ -50,7 +50,7 @@
 
 								<div class="form-group" style="width:300px;">
 
-									<input id="password" style="border:0.1em solid  #85C1E9;" id="password" type="password" name="password" class="form-control" placeholder="Password">
+									<input style="border:0.1em solid  #85C1E9;" id="password" type="password" name="password" class="form-control" placeholder="Password">
 
 								</div>
 
@@ -89,9 +89,9 @@
 
 						<center>
 
-								<button style="width: 180px; color:  #85C1E9; border:0.15em solid #AED6F1; border-radius:5px;" class="btn btn-default">
+								<a href="/signup" style="width: 180px; color:  #85C1E9; border:0.15em solid #AED6F1; border-radius:5px;" class="btn btn-default">
 								   Create Account
-								 </button>
+								 </a>
 
 								 </center>
 
@@ -116,15 +116,26 @@
 		var email = document.forms["loginform"]["email"];
 	  var password = document.forms["loginform"]["password"];
 
-		 if(__FormValidate()) {
+		 if(__FormValidate(email, password)) {
 
 		  	 __EchoError('#EmailError', 'Fill In All Login Fields');
 
 		  } else {
 
-		  	HTTP.set('POST', '/api/login/', new FormData(DOM.get('#loginform'))).request((response) => {
+		  	HTTP.set('POST', `/api/login/`, new FormData(DOM.get('#loginform'))).request((resp) => {
 
-		  		alert(response.message);
+		  		   if(resp.error == true && resp.logged == false){
+
+		  		   	   __EchoError('#EmailError', resp.message);
+
+		  		   }else if(resp.error == false && resp.logged == true){
+
+		  		   	  localStorage.setItem('id', resp.user.user_id);
+		  		   	  localStorage.setItem('username', resp.user.username);
+
+		  		   	  window.location = resp.message;
+
+		  		   }
 
 		  	}, {need_progress_bar : false});
 
@@ -138,7 +149,7 @@
 
 	}
 
-	function __FormValidate() {
+	function __FormValidate(email, password) {
 
 	   return (email.value == '' || password.value == '') ? true : false;
 
