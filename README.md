@@ -12,6 +12,10 @@ Specifically Offering Services To Paying Students!
 
 This Repository Is For The Codebase Of Tutorgram
 
+# Files To Start With :
+   -> Tutorgram-NodeJS/tutorgram.js
+   -> Tutorgram-NodeJS/api/api.js
+
 #   Tutorgram-NodeJS/tutorgram.js
 
 This File Is The Entry Point Of The System. tutorgram.js Has Two Parts, Routes For Serving HTML Files For The Web & The API routes That Serve Data To The Web And Other Interfaces That Need The Data Operate Like Mobile App, Desktop App
@@ -27,14 +31,13 @@ This File Is The Entry Point Of The System. tutorgram.js Has Two Parts, Routes F
 
    $route = '/api/'
    
-       #Login : $route.'/login'
+       #Login : 'api/login'
               Returns {error: '', 'message', user : {Logged In User Data}}
               
-       #User Profile : $route.'/user/:username'
+       #User Profile : '/api/:username'
               Returns {user : user_info :{ bio : {}, profile_pic : {}}}
               
        #Follow : $route.'/follow/'
-       
        #
 
 
