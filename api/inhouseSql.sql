@@ -63,3 +63,58 @@ CREATE TABLE bio(
     user_occupation text not null
 );
 --INSERT INTO users VALUES("maddox", "madd@gmail", "student", "20/3/4", "maddox", NULL);
+
+CREATE TABLE tutor(
+    user_id int not null,
+    price text not null,
+    location text not null,
+    subject text not null,
+    qualification text not null,
+    qualification_file_url text not null,
+    rating text not null,
+    tutor_id int not null PRIMARY KEY AUTO_INCREMENT
+);
+
+
+CREATE TABLE messages(
+    user_one_id int not null,
+    user_two_id int not null,
+    message_text text not null,
+    message_url text not null,
+    message_date text not null,
+    message_seen int not null,
+    message_id int not null PRIMARY KEY AUTO_INCREMENT
+);
+
+
+CREATE TABLE temp_messages(
+    user_one_id int not null,
+    user_two_id int not null,
+    message_text text not null,
+    temp_msg_id int not null PRIMARY KEY AUTO_INCREMENT
+);
+
+
+CREATE TABLE notifications(
+    viewer_id int not null, /* Person Who Created The Notification, Liked, Commented etc */
+    user_id int not null, /* Person Whom The Notification IS Directed To */
+    post_id int not null,
+    type text not null,
+    notif_id int not null PRIMARY KEY AUTO_INCREMENT
+);
+
+
+CREATE TABLE requests(
+    user_id int not null,
+    tutor_id int not null,
+    status text not null
+    req_id int not null PRIMARY KEY AUTO_INCREMENT
+);
+
+
+CREATE TABLE reviews(
+    user_id int not null,
+    comment_id int not null,
+    type text not null,
+    review_id int not null PRIMARY KEY AUTO_INCREMENT
+);
