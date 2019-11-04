@@ -1,9 +1,10 @@
-
 const express = require('express');
 const API = require('./api/api.js');
 const bodyParser = require('body-parser');
 const formidable = require('formidable');
 const session = require('express-session');
+const fs = require('fs');
+const passwordHash = require('password-hash');
 
 const app = express();
 
@@ -18,6 +19,9 @@ app.use(express.static(frontendPath));
 app.use(express.static(FrontCDN));
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
+app.use(session({
+secret : 'iamtheshit', maxAge : Date.now + (30 * 86400 * 1000)
+}));
 
 app.use(session({secret: 'iamtheshit'}));
 
@@ -33,17 +37,21 @@ const notifier = {error : true, message : "Hey, We See You, What You Trying To D
  * 
  */
 
+
+app.get('/', (request, response) => {
+    response.redirect('/login');
+})
 app.get('/login', (request, response) => {
 
-    if(request.session.userId){                                  // Check Session For Logged In
+    /*if(request.session.userId){                                  // Check Session For Logged In
 
         response.redirect('/home');                              // Since User Is Logged In, Redirect To Home
 
-    }else{                                                       // Not Logged?, Show Login Page
+    }else{   */                                                    // Not Logged?, Show Login Page
 
         response.sendFile(`${FrontEndLayouts}/account/login.html`, {root : __dirname}); 
 
-    }
+    //}
 
 });
 
@@ -59,11 +67,11 @@ app.get('/home', (request, response) => {
 
         response.sendFile(`${FrontEndLayouts}/home/home.html`, {root : __dirname});
 
-    // }else{
+   /* }else{
 
-    //     response.redirect('/login');
+        response.redirect('/login');
 
-    // }
+    }*/
 
 });
 
@@ -72,12 +80,12 @@ app.get('/user/:username', (request, response) => {
     // if(request.session.userId){
 
         response.sendFile(`${FrontEndLayouts}/user/user.html`, {root : __dirname});
+/*
+    }else{
 
-    // }else{
+        response.redirect('/login');
 
-    //     response.redirect('/login');
-
-    // }
+    }*/
 
 });
 
@@ -118,6 +126,8 @@ app.get('/session', (request, response) => {
 
         }else{
 
+            // fields.password = passwordHash.generate(fields.password);
+
             let signUp = new API.createAccount(fields);       // Instantiate An Object To Create A New User!
 
             signUp.create((data) => {                         // CallBack Function
@@ -152,11 +162,13 @@ app.get('/session', (request, response) => {
         
     if(fields.email == '' || fields.password == ''){           // Check Fields
 
-        response.json({error : true, message : "What Are You Trying To Do?, Use Our Form And Website"});
+        response.json(notifier);
         response.end();
 
     }else{
 
+        // fields.password = passwordHash.generate(fields.password)
+        console.log(fields);
         let login = new API.login(fields.email, fields.password);   // Login Class To Check User Account Details
 
            login.accessor((data) => {
@@ -184,14 +196,44 @@ app.get('/session', (request, response) => {
 
  app.get('/api/posts', (request, response) => {
 
-    let posts = new API.posts(1);
+    form = request.query;
 
-    posts.getPosts(0, (data) => {
-        
-        response.json(data);
+    if(form.context == ''){
 
+        response.json(notifier);
         response.end();
-    });
+
+    }else{
+
+        let posts = null;
+
+        if(form.context == 1){
+
+            posts = new API.posts(form.context, 0, 0);
+
+        }else if(form.context == 2){
+
+            posts = new API.posts(form.context, form.user_id, 0);
+
+        }else if(form.context == 3){
+
+            posts = new API.posts(form.context, 0, form.post_id);
+
+        }else{
+
+            response.json(notifier);
+            response.end();
+
+        }
+
+        posts.get(form.view_id, (data) => {
+
+            response.json(data);
+            response.end();
+
+        });
+
+    }
 
  });                                                             // End Of API posts Route
 
@@ -208,7 +250,7 @@ app.get('/session', (request, response) => {
 
         if(fields.context == '' || fields.viewer_id == ''){
 
-            response.json({error : true, message : "Hey, We See You, What You Trying To Do!!"});
+            response.json(notifier);
             response.end();
             
         }else{
@@ -284,10 +326,9 @@ app.get('/session', (request, response) => {
 
 
 
- app.get('/api/likes', (request, response) => {
+ app.post('/api/react', (request, response) => {
 
-      form = new formidable.IncomingForm().
-
+      form = new formidable.IncomingForm();
 
       form.parse(request, (err, fields, files) => {
 
@@ -301,6 +342,7 @@ app.get('/session', (request, response) => {
 
             let react = new API.react(fields);
 
+            console.log(fields);
 
               if(fields.context == 1){
 
@@ -339,15 +381,28 @@ app.get('/session', (request, response) => {
 
                 files.file.user_id = fields.user_id;
                 files.file.username = res.username;
-                files.file.text = fields.ask_text;
+                files.file.context = fields.context;
                 files.file.newPath = __dirname;
 
-                let ask = new API.ask(files.file);
+            console.log(fields);
+                let ask = null;
+
+                if(fields.context == 1){
+
+                    files.file.text = fields.ask_text;
+
+                    ask = new API.ask(files.file);
+
+                }else{
+
+                    files.file.upload_type = fields.upload_type;
+
+                    ask = new API.ask(files.file);
+
+                }
 
                 ask.add((data) => {
-
                     console.log(data);
-
                     response.json(data);
                     response.end();
 
@@ -367,7 +422,7 @@ app.get('/session', (request, response) => {
 
     form.parse(request, (err, fields, files) => {
 
-        if(fields.context == '' || fields.user_id == '' || fields.q){
+        if(fields.context == '' || fields.user_id == '' || fields.q == ''){
 
             response.json(notifier);
             response.end();
@@ -390,6 +445,301 @@ app.get('/session', (request, response) => {
 
  });
 
+   // For Searching Tutors Nearby!!
+
+ app.post('/api/tutors', (request, response) => {
+
+    form = new formidable.IncomingForm();
+
+
+    form.parse(request, (err, fields, files) => {
+
+        if(fields.subject == '' && fields.location == '' && fields.user_id == '') {
+
+            response.json(notifier);
+            response.end();
+
+        }else{
+
+            let tutors = new API.tutors(fields);
+
+            tutors.getAll(fields.user_id, (data) => {
+
+                response.json(data);
+                response.end();
+
+            });
+
+        }
+
+    });
+
+});
+
+ app.post('/api/messages', (request, response) => {
+
+    form = new formidable.IncomingForm();
+
+    form.parse(request, (err, fields, files) => {
+
+        if(fields.user_one_id == '' || fields.user_two_id == '' || fields.context == ''){
+
+            response.json(notifier);
+            response.end();
+
+        }else{
+
+            let chats = null;
+
+            if(fields.context == 2 || fields.context == 3){
+
+                fields.message_url = '';
+
+                console.log(files.message_file);
+
+                chats = new API.messages(fields);
+
+            }else if(fields.context == 1){
+
+                console.log('Running Without A File! Why You Executing Even If The File Is Undefined?');
+                
+                files.message_file.user_one_id = fields.user_one_id;
+                files.message_file.user_two_id = fields.user_two_id;
+                files.message_file.context = fields.context;
+                files.message_file.message_text = fields.message_text;
+
+                if(files.message_file.size != 0){
+                    files.message_file.message_url = `http://192.168.43.13:5000/cdn/messages/${files.message_file.name}`;
+                    fs.rename(files.message_file.path, `${__dirname}/cdn/cdn/messages/${files.message_file.name}`, (err) => {
+
+                    if(err) console.log(err);
+
+                    });
+
+                }else{
+
+                    files.message_file.message_url = '';
+
+                }
+
+                chats = new API.messages(files.message_file);
+
+            }else{
+
+                fields.message_url = '';
+
+                console.log(files.message_file);
+
+                chats = new API.messages(fields);
+
+            }
+
+            if(fields.context == 1 || fields.context == 7){  // For Sending Messages
+
+                chats.sendMessage((data) => {
+
+                    response.json(data);
+                    response.end();
+
+                });
+
+            }else if(fields.context == 2){ // For Getting Chats
+
+                chats.viewChats((data) => {
+
+                    response.json(data);
+                    response.end();
+
+                });
+
+            }else if(fields.context == 3){ // For Getting Messages
+
+                chats.getMessages((data) => {
+
+                    response.json(data);
+                    response.end();
+
+                });
+            } // End Of Context Check
+        }
+    });   // End Pf Parse
+
+ });  // End Of Messages Route
+
+ app.post('/api/become-a-tutor', (request, response) => {
+
+    form = new formidable.IncomingForm();
+
+    form.parse(request, (err, fields, files) => {
+
+        if(fields.subject == '' || fields.price == '' /*|| files.qualification_file == undefined*/){
+
+            response.json(notifier);
+            response.end();
+
+        }else{
+
+            console.log(fields);
+
+            console.log(files.qualification_file);
+
+            fs.rename(files.qualification_file.path, `${__dirname}/cdn/cdn/qualifications/${files.qualification_file.name}`, (err) => {
+
+                if(err) console.log(err);
+            });
+
+            fields.qualification_file_url = `http://192.168.43.13:5000/cdn/qualifications/${files.qualification_file.name}`;
+
+            let beAtutor = new API.beTutor(fields);
+
+            beAtutor.insertTutor((data) => {
+
+                response.json(data);
+                response.end();
+
+            });
+
+        }
+
+    });
+
+ });
+app.post('/api/crumbs', (request, response) => {
+
+    form = new formidable.IncomingForm();
+
+
+    form.parse(request, (err, fields, files) => {
+
+        let crumbs = null;
+
+
+        if(fields.context == 1 || fields.context == 7){
+
+            crumbs = new API.crumbs({user_id : fields.user_one_id, tutor_id : fields.user_two_id});
+
+            crumbs.requests((data) => {
+
+                response.json(data);
+                response.end();
+
+            });
+
+        }else if(fields.context == 2){
+
+            crumbs = new API.crumbs(fields);
+
+            crumbs.review((data) => {
+
+                response.json(data);
+                response.end();
+
+            });
+
+        }
+
+    });
+
+});
+
+app.get('/api/notifications', (request, response) => {
+
+
+    form = request.query;
+
+    if(form.context == '' || form.user_id == ''){
+
+        response.json(notifier);
+        response.end();
+
+    }else{
+
+        let getNotification = new API.notifications(form);
+
+        getNotification.userNotifications((data) => {
+
+            response.json(data);
+            response.end();
+
+        });
+
+    }
+
+});
+
+app.post('/api/comment', (request, response) => {
+
+    form = new formidable.IncomingForm();
+
+    form.parse(request, (err, fields, files) => {
+
+        let comment = null;
+
+        if(files.comment_file.size == 0 && fields.comment_text != ''){
+
+            fields.type = 'text';
+            fields.comment_url = '';
+
+            comment = new API.comment(fields);
+
+        }else if(files.comment_file.size != 0){
+
+
+            fs.rename(files.comment_file.path, `${__dirname}/cdn/cdn/comments/${files.comment_file.name}`, (error) => {
+
+                if(error) throw err;
+
+            });
+
+            files.comment_file.user_id = fields.user_id;
+            files.comment_file.post_id = fields.post_id;
+            files.comment_file.comment_text = fields.comment_text;
+            files.comment_file.context = fields.context;
+            files.comment_file.type = (files.comment_file.type == 'video/mp4' || files.comment_file.type == 'video/mkv') ? 'video' : 'image';
+            files.comment_file.comment_url = `http://192.168.43.13:5000/cdn/comments/${files.comment_file.name}`;
+
+            comment = new API.comment(files.comment_file);
+
+        }
+
+        
+        comment.addComment((data) => {
+
+            response.json(data);
+            response.end();
+
+        });
+
+    });
+
+});
+
+app.get('/api/comment', (request, response) => {
+
+    form = request.query;
+
+      if(form.user_id == '' || form.comment_id == '' || form.context == ''){
+
+          response.json(notifier);
+          response.end();
+
+      }else{
+
+        let Comments = new API.comment(form);
+
+
+        Comments.getComments(form.user_id, (data) => {
+
+            response.json(data);
+            response.end();
+
+        });
+
+
+      }
+
+});
+
  /**
  *
  *
@@ -397,7 +747,7 @@ app.get('/session', (request, response) => {
  *
  */
 
- app.listen('5000',() => {                                         // Start Server!
+ app.listen('5000','192.168.43.13' || 'localhost',() => {                                         // Start Server!
 
         console.log('Tutorgram Server Has Started On Port 5000!');
 
